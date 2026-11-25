@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Схемотехника и компоненты: Дрон-мойщик окон</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .node-box {
+            transition: all 0.2s ease;
+        }
+        .node-box:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        canvas {
+            touch-action: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-slate-800 border-b border-slate-700 p-4 shadow-md">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-cyan-400 flex items-center gap-2">
+                    <i class="fa-solid fa-drone"></i> Дрон-Мойщик Окон: Схемотехника
+                </h1>
+                <p class="text-sm text-slate-400">Инженерный проект (10 класс) — Интерактивная схема, компоненты и алгоритм площади</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="switchTab('schematic')" id="btn-schematic" class="px-4 py-2 rounded-lg bg-cyan-600 text-white font-medium text-sm transition hover:bg-cyan-500 shadow">
+                    <i class="fa-solid fa-network-wired mr-1"></i> Схема соединений
+                </button>
+                <button onclick="switchTab('components')" id="btn-components" class="px-4 py-2 rounded-lg bg-slate-700 text-slate-300 font-medium text-sm transition hover:bg-slate-600">
+                    <i class="fa-solid fa-list-check mr-1"></i> Список компонентов
+                </button>
+                <button onclick="switchTab('area_logic')" id="btn-area_logic" class="px-4 py-2 rounded-lg bg-slate-700 text-slate-300 font-medium text-sm transition hover:bg-slate-600">
+                    <i class="fa-solid fa-ruler-combined mr-1"></i> Расчет площади
+                </button>
+                <button onclick="switchTab('calculator')" id="btn-calculator" class="px-4 py-2 rounded-lg bg-slate-700 text-slate-300 font-medium text-sm transition hover:bg-slate-600">
+                    <i class="fa-solid fa-bolt mr-1"></i> Расчет питания
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col">
+
+        <!-- TAB 1: SCHEMATIC -->
+        <div id="tab-schematic" class="space-y-6">
+            <div class="bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl p-4 md:p-6 shadow-xl">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-white">Интерактивная блок-схема соединений</h2>
+                        <p class="text-xs text-slate-400">Нажмите на любой модуль, чтобы просмотреть подробную карту пинов и подключений.</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex items-center text-xs text-emerald-400 bg-emerald-950/50 px-2.5 py-1 rounded-full border border-emerald-800">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span> Питание 5V / 12V
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Visual Interactive Grid Diagram -->
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 relative">
+                    
+                    <!-- MCU -->
+                    <div onclick="showPinDetails('mcu')" class="node-box bg-slate-900 border-2 border-cyan-500/60 rounded-xl p-4 cursor-pointer relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-cyan-500 text-slate-950 font-bold text-[10px] px-2 py-0.5 rounded-bl">МОЗГИ</div>
+                        <div class="text-cyan-400 text-lg mb-1"><i class="fa-solid fa-microchip"></i></div>
+                        <h3 class="font-bold text-white text-base">Arduino Mega 2560</h3>
+                        <p class="text-xs text-slate-400 mt-1">Центральный микроконтроллер. Обработка датчиков, расчет площади и управление исполнителями.</p>
+                        <div class="mt-3 text-[11px] text-cyan-300 font-mono bg-cyan-950/40 p-1.5 rounded border border-cyan-900/50">
+                            GPIO / PWM / I2C / UART
+                        </div>
+                    </div>
+
+                    <!-- Power Module -->
+                    <div onclick="showPinDetails('power')" class="node-box bg-slate-900 border-2 border-amber-500/60 rounded-xl p-4 cursor-pointer relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-amber-500 text-slate-950 font-bold text-[10px] px-2 py-0.5 rounded-bl">ПИТАНИЕ</div>
+                        <div class="text-amber-400 text-lg mb-1"><i class="fa-solid fa-car-battery"></i></div>
+                        <h3 class="font-bold text-white text-base">Силовое питание (LiPo 3S)</h3>
+                        <p class="text-xs text-slate-400 mt-1">Аккумулятор 11.1V с понижающим преобразователем LM2596 до 5V для логической схемы.</p>
+                        <div class="mt-3 text-[11px] text-amber-300 font-mono bg-amber-950/40 p-1.5 rounded border border-amber-900/50">
+                            12V (нагрузка) | 5V (логика)
+                        </div>
+                    </div>
+
+                    <!-- LiDAR Sensors -->
+                    <div onclick="showPinDetails('sonar')" class="node-box bg-slate-900 border-2 border-indigo-500/60 rounded-xl p-4 cursor-pointer relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-indigo-500 text-slate-950 font-bold text-[10px] px-2 py-0.5 rounded-bl">ДИСТАНЦИЯ</div>
+                        <div class="text-indigo-400 text-lg mb-1"><i class="fa-solid fa-ruler"></i></div>
+                        <h3 class="font-bold text-white text-base">LiDAR датчики (VL53L0X)</h3>
+                        <p class="text-xs text-slate-400 mt-1">Лазерные дальномеры по шине I2C для контроля и удержания постоянного удаления от стекла.</p>
+                        <div class="mt-3 text-[11px] text-indigo-300 font-mono bg-indigo-950/40 p-1.5 rounded border border-indigo-900/50">
+                            I2C шина (SDA / SCL)
+                        </div>
+                    </div>
+
+                    <!-- Laser Beacons & Optical Sensors (UPDATED) -->
+                    <div onclick="showPinDetails('edge_sensors')" class="node-box bg-slate-900 border-2 border-teal-500/60 rounded-xl p-4 cursor-pointer relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-teal-500 text-slate-950 font-bold text-[10px] px-2 py-0.5 rounded-bl">ПОЗИЦИОНИРОВАНИЕ</div>
+                        <div class="text-teal-400 text-lg mb-1"><i class="fa-solid fa-laser-pointer"></i></div>
+                        <h3 class="font-bold text-white text-base">Оптические датчики на дроне + Лазерные маяки в углах</h3>
+                        <p class="text-xs text-slate-400 mt-1">Бортовые фотоприемники улавливают лучи внешних лазеров из углов рамы для точного определения площади и границ.</p>
+                        <div class="mt-3 text-[11px] text-teal-300 font-mono bg-teal-950/40 p-1.5 rounded border border-teal-900/50">
+                            Analog / Digital Pins (A0-A3)
+                        </div>
+                    </div>
+
+                    <!-- Water Pump & Relay -->
+                    <div onclick="showPinDetails('pump')" class="node-box bg-slate-900 border-2 border-blue-500/60 rounded-xl p-4 cursor-pointer relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-blue-500 text-slate-950 font-bold text-[10px] px-2 py-0.5 rounded-bl">МОЙКА</div>
+                        <div class="text-blue-400 text-lg mb-1"><i class="fa-solid fa-faucet-drip"></i></div>
+                        <h3 class="font-bold text-white text-base">Реле + Помпа 12V</h3>
+                        <p class="text-xs text-slate-400 mt-1">Одноканальное реле с опторазвязкой для подачи моющей жидкости на стекло.</p>
+                        <div class="mt-3 text-[11px] text-blue-300 font-mono bg-blue-950/40 p-1.5 rounded border border-blue-900/50">
+                            IN -> Digital Pin | VCC -> 5V
+                        </div>
+                    </div>
+
+                    <!-- Status LEDs & Buzzer -->
+                    <div onclick="showPinDetails('indicators')" class="node-box bg-slate-900 border-2 border-emerald-500/60 rounded-xl p-4 cursor-pointer relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-emerald-500 text-slate-950 font-bold text-[10px] px-2 py-0.5 rounded-bl">ИНДИКАЦИЯ</div>
+                        <div class="text-emerald-400 text-lg mb-1"><i class="fa-solid fa-lightbulb"></i></div>
+                        <h3 class="font-bold text-white text-base">Адресная лента (WS2812B)</h3>
+                        <p class="text-xs text-slate-400 mt-1">Светодиодная матрица/лента для визуального отображения статуса мойки и площади.</p>
+                        <div class="mt-3 text-[11px] text-emerald-300 font-mono bg-emerald-950/40 p-1.5 rounded border border-emerald-900/50">
+                            Digital Pin + FastLED Lib
+                        </div>
+                    </div>
+
+                    <!-- Vacuum Motor / Suction -->
+                    <div onclick="showPinDetails('vacuum')" class="node-box bg-slate-900 border-2 border-rose-500/60 rounded-xl p-4 cursor-pointer relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-rose-500 text-slate-950 font-bold text-[10px] px-2 py-0.5 rounded-bl">УДЕРЖАНИЕ</div>
+                        <div class="text-rose-400 text-lg mb-1"><i class="fa-solid fa-fan"></i></div>
+                        <h3 class="font-bold text-white text-base">Вакуумная турбина + ESC</h3>
+                        <p class="text-xs text-slate-400 mt-1">Бесколлекторный двигатель с регулятором хода для присасывания дрона к стеклу.</p>
+                        <div class="mt-3 text-[11px] text-rose-300 font-mono bg-rose-950/40 p-1.5 rounded border border-rose-900/50">
+                            PWM Signal -> ESC
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Dynamic Pinout & Connection Inspector -->
+                <div id="inspector-panel" class="mt-6 bg-slate-900 border border-slate-700 rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 id="inspector-title" class="text-base font-bold text-cyan-400 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-info"></i> Выберите узел выше для просмотра схемы подключения
+                        </h3>
+                    </div>
+                    <div id="inspector-content" class="text-sm text-slate-300 space-y-2">
+                        <p class="text-slate-400 italic">Кликните по любому квадрату компонента, чтобы узнать точные пины Arduino Mega, номиналы и схему питания.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TAB 2: COMPONENTS -->
+        <div id="tab-components" class="hidden space-y-6">
+            <div class="bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl p-6 shadow-xl">
+                <h2 class="text-xl font-bold text-white mb-2">Спецификация компонентов (Bill of Materials)</h2>
+                <p class="text-sm text-slate-400 mb-6">Полный перечень деталей для сборки инженерного прототипа.</p>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b border-slate-700 text-slate-400 uppercase text-xs">
+                                <th class="py-3 px-4">Компонент</th>
+                                <th class="py-3 px-4">Кол-во</th>
+                                <th class="py-3 px-4">Назначение</th>
+                                <th class="py-3 px-4">Питание / Интерфейс</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-700/50 text-slate-300">
+                            <tr>
+                                <td class="py-3 px-4 font-semibold text-cyan-400">Arduino Mega 2560</td>
+                                <td class="py-3 px-4">1 шт</td>
+                                <td class="py-3 px-4">Главный контроллер управления и логики</td>
+                                <td class="py-3 px-4 font-mono text-xs">5V (USB / VIN)</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-semibold text-indigo-400">LiDAR датчики (VL53L0X)</td>
+                                <td class="py-3 px-4">2 шт</td>
+                                <td class="py-3 px-4">Измерение расстояния до стекла</td>
+                                <td class="py-3 px-4 font-mono text-xs">3.3V/5V, I2C шина</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-semibold text-teal-400">Бортовые оптические датчики света / фотоприемники</td>
+                                <td class="py-3 px-4">4 шт</td>
+                                <td class="py-3 px-4">Фиксация лучей от внешних лазерных маяков в углах рамы</td>
+                                <td class="py-3 px-4 font-mono text-xs">Analog / Digital Input</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-semibold text-teal-300">Внешние лазерные излучатели (маяки)</td>
+                                <td class="py-3 px-4">4 шт</td>
+                                <td class="py-3 px-4">Устанавливаются в 4 углах рамы для создания координатной сетки</td>
+                                <td class="py-3 px-4 font-mono text-xs">Внешнее питание 5V</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-semibold text-blue-400">Релейный модуль 1-канал (5V, с опторазвязкой)</td>
+                                <td class="py-3 px-4">1 шт</td>
+                                <td class="py-3 px-4">Коммутация водяной помпы</td>
+                                <td class="py-3 px-4 font-mono text-xs">5V логика, 12V нагрузка</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-semibold text-blue-300">Водяная мини-помпа 12V</td>
+                                <td class="py-3 px-4">1 шт</td>
+                                <td class="py-3 px-4">Подача моющей жидкости на губку</td>
+                                <td class="py-3 px-4 font-mono text-xs">12V DC</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-semibold text-emerald-400">Адресная светодиодная лента WS2812B</td>
+                                <td class="py-3 px-4">1 шт (метр)</td>
+                                <td class="py-3 px-4">Индикация режимов и подсветка</td>
+                                <td class="py-3 px-4 font-mono text-xs">5V, 1 сигнальный пин</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-semibold text-rose-400">Бесколлекторный мотовентилятор + ESC (турбина)</td>
+                                <td class="py-3 px-4">1 шт</td>
+                                <td class="py-3 px-4">Создание вакуумного прижима к стеклу</td>
+                                <td class="py-3 px-4 font-mono text-xs">11.1V (3S LiPo), PWM</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-semibold text-amber-400">Аккумулятор LiPo 3S (11.1V, 2200–3000 мАч, 25C+)</td>
+                                <td class="py-3 px-4">1 шт</td>
+                                <td class="py-3 px-4">Автономное питание силовой части</td>
+                                <td class="py-3 px-4 font-mono text-xs">11.1V - 12.6V, разъём XT60</td>
+                            </tr>
+                            <tr>
+                                <td class="py-3 px-4 font-semibold text-amber-300">Понижающий DC-DC преобразователь LM2596</td>
+                                <td class="py-3 px-4">1 шт</td>
+                                <td class="py-3 px-4">Стабилизация напряжения до 5V для Arduino</td>
+                                <td class="py-3 px-4 font-mono text-xs">Вход 7-35V, Выход 5V 3A</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: AREA LOGIC (NEW) -->
+        <div id="tab-area_logic" class="hidden space-y-6">
+            <div class="bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl p-6 shadow-xl space-y-6">
+                <div>
+                    <h2 class="text-xl font-bold text-white mb-2"><i class="fa-solid fa-laser-pointer text-teal-400 mr-2"></i>Инновационная навигация: Лазерные маяки + Бортовые фотоприемники</h2>
+                    <p class="text-sm text-slate-400">Абсолютное позиционирование дрона и автоматический расчет площади моющей поверхности без накопления погрешности.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-900 p-5 rounded-xl border border-slate-700 space-y-4">
+                        <h3 class="font-bold text-teal-400 text-base flex items-center gap-2">
+                            <i class="fa-solid fa-arrows-to-dot"></i> Принцип работы системы
+                        </h3>
+                        <ol class="text-sm text-slate-300 space-y-3 list-decimal list-inside">
+                            <li><strong>Маяки в углах:</strong> В четырех углах оконной рамы закрепляются миниатюрные лазерные излучатели, направленные вдоль плоскости стекла.</li>
+                            <li><strong>Бортовые датчики:</strong> На дроне установлены оптические фотоприемники/датчики света, фиксирующие пересечение лучей.</li>
+                            <li><strong>Без накопления ошибки:</strong> При прохождении луча микроконтроллер точно знает свои координаты относительно углов рамы.</li>
+                            <li><strong>Расчет площади:</strong> Фиксация крайних точек позволяет мгновенно вычислить размеры <code class="text-teal-300">W</code> и <code class="text-teal-300">H</code> и площадь <code class="text-teal-300 font-mono">S = W × H</code>.</li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-slate-900 p-5 rounded-xl border border-slate-700 space-y-4 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-cyan-400 text-base mb-3"><i class="fa-solid fa-plug"></i> Подключение к Arduino Mega</h3>
+                            <div class="space-y-2 text-xs font-mono text-slate-300">
+                                <div class="bg-slate-800 p-2.5 rounded border border-slate-700 flex justify-between items-center">
+                                    <span>Фотоприемник (Верх-Лево):</span>
+                                    <span class="text-teal-300">Pin A0</span>
+                                </div>
+                                <div class="bg-slate-800 p-2.5 rounded border border-slate-700 flex justify-between items-center">
+                                    <span>Фотоприемник (Верх-Право):</span>
+                                    <span class="text-teal-300">Pin A1</span>
+                                </div>
+                                <div class="bg-slate-800 p-2.5 rounded border border-slate-700 flex justify-between items-center">
+                                    <span>Фотоприемник (Низ-Лево):</span>
+                                    <span class="text-teal-300">Pin A2</span>
+                                </div>
+                                <div class="bg-slate-800 p-2.5 rounded border border-slate-700 flex justify-between items-center">
+                                    <span>Фотоприемник (Низ-Право):</span>
+                                    <span class="text-teal-300">Pin A3</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-teal-950/40 border border-teal-800/50 p-3 rounded-lg text-xs text-teal-300">
+                            <i class="fa-solid fa-lightbulb mr-1"></i> Совмещение с LiDAR: LiDAR поддерживает постоянный зазор до стекла, а лазерные маяки строят абсолютную карту помещения.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: CALCULATOR / POWER -->
+        <div id="tab-calculator" class="hidden space-y-6">
+            <div class="bg-slate-800/80 backdrop-blur border border-slate-700 rounded-2xl p-6 shadow-xl">
+                <h2 class="text-xl font-bold text-white mb-2">Расчет энергопотребления и выбор питания</h2>
+                <p class="text-sm text-slate-400 mb-6">Оценка токов нагрузки для подбора емкости аккумулятора и стабилизаторов.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-slate-900 p-5 rounded-xl border border-slate-700 space-y-4">
+                        <h3 class="font-bold text-cyan-400 text-base">Потребители энергии (Ток в амперах)</h3>
+                        
+                        <div class="flex justify-between items-center text-sm border-b border-slate-800 pb-2">
+                            <span>Arduino Mega + датчики + лента</span>
+                            <span class="font-mono text-cyan-300">~ 0.40 А (5V)</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm border-b border-slate-800 pb-2">
+                            <span>Водяная помпа 12V</span>
+                            <span class="font-mono text-cyan-300">~ 0.60 А (12V)</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm border-b border-slate-800 pb-2">
+                            <span>Вакуумная турбина (прижим)</span>
+                            <span class="font-mono text-cyan-300">~ 2.50 А (12V)</span>
+                        </div>
+
+                        <div class="pt-2 flex justify-between items-center font-bold text-white">
+                            <span>Пиковый суммарный ток:</span>
+                            <span class="font-mono text-amber-400">~ 3.50 А</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 p-5 rounded-xl border border-slate-700 space-y-4 flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-amber-400 text-base mb-2">Характеристики аккумулятора и требования</h3>
+                            <ul class="text-sm text-slate-300 space-y-2 list-disc list-inside">
+                                <li><strong>Тип и напряжение:</strong> LiPo 3S (11.1V номинальное, 12.6V полностью заряжен).</li>
+                                <li><strong>Емкость:</strong> 2200–3000 мАч (обеспечивает автономность около 25–40 минут работы).</li>
+                                <li><strong>Токоотдача:</strong> 25C+ для уверенной работы вакуумной турбины при пуске.</li>
+                                <li><strong>Разъем:</strong> силовые провода с разъемом XT60.</li>
+                            </ul>
+                        </div>
+                        <div class="bg-cyan-950/40 border border-cyan-800/50 p-3 rounded-lg text-xs text-cyan-300">
+                            <i class="fa-solid fa-triangle-exclamation mr-1"></i> Не забудьте объединить общий провод земли (<code class="text-amber-300">GND</code>) для всех модулей!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 border-t border-slate-700 py-4 text-center text-xs text-slate-400">
+        Дрон-мойщик окон • Проект для 10 класса • Схемотехника и автоматика
+    </footer>
+
+    <!-- JavaScript for Interactive Logic -->
+    <script>
+        // Tab Switching Logic
+        function switchTab(tabName) {
+            ['schematic', 'components', 'area_logic', 'calculator'].forEach(t => {
+                document.getElementById('tab-' + t).classList.add('hidden');
+                document.getElementById('btn-' + t).className = "px-4 py-2 rounded-lg bg-slate-700 text-slate-300 font-medium text-sm transition hover:bg-slate-600";
+            });
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+            document.getElementById('btn-' + tabName).className = "px-4 py-2 rounded-lg bg-cyan-600 text-white font-medium text-sm transition hover:bg-cyan-500 shadow";
+        }
+
+        // Inspector Data for Pinout & Connections
+        const pinDetails = {
+            mcu: {
+                title: "Arduino Mega 2560 (Центральный узел)",
+                html: `
+                    <p class="text-slate-300 mb-2">Главный мозг дрона. Обрабатывает сигналы лазерных фотоприемников и I2C дальномеров.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                        <div class="bg-slate-800 p-3 rounded border border-slate-700">
+                            <strong class="text-cyan-400 block mb-1">Датчики и Шины:</strong>
+                            <ul class="text-xs space-y-1 text-slate-300 font-mono">
+                                <li>LiDAR (I2C) -> Pins 20 (SDA), 21 (SCL)</li>
+                                <li>Фотоприемники лазеров -> Pins A0 - A3</li>
+                            </ul>
+                        </div>
+                        <div class="bg-slate-800 p-3 rounded border border-slate-700">
+                            <strong class="text-cyan-400 block mb-1">Исполнительные элементы:</strong>
+                            <ul class="text-xs space-y-1 text-slate-300 font-mono">
+                                <li>Реле помпы -> Pin 7 (Digital OUT)</li>
+                                <li>ESC вакуума -> Pin 9 (PWM Signal)</li>
+                                <li>Лента WS2812B -> Pin 6 (Digital / PWM)</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+            power: {
+                title: "Силовое питание (LiPo 3S + LM2596)",
+                html: `
+                    <p class="text-slate-300 mb-2">Автономный источник энергии для всех систем дрона.</p>
+                    <ul class="text-sm space-y-2 text-slate-300">
+                        <li><strong>LiPo 3S (11.1V, 2200–3000 мАч, 25C+, XT60):</strong> Подает силовое напряжение на вакуумную турбину и помпу.</li>
+                        <li><strong>DC-DC преобразователь LM2596:</strong> Стабилизирует напряжение до <strong>5.0V</strong> для питания микроконтроллера Arduino Mega и датчиков.</li>
+                    </ul>
+                `
+            },
+            sonar: {
+                title: "Лазерные дальномеры LiDAR (VL53L0X)",
+                html: `
+                    <p class="text-slate-300 mb-2">Используются для контроля дистанции между дроном и стеклом.</p>
+                    <div class="bg-slate-800 p-3 rounded border border-slate-700 text-xs font-mono space-y-1">
+                        <div>VCC -> 5V | GND -> Общая земля</div>
+                        <div>SDA -> Pin 20 (Arduino Mega) | SCL -> Pin 21 (Arduino Mega)</div>
+                    </div>
+                `
+            },
+            edge_sensors: {
+                title: "Оптические датчики на дроне + Лазерные маяки в углах",
+                html: `
+                    <p class="text-slate-300 mb-2">Инновационная система позиционирования: внешние лазеры светят из четырех углов рамы, а бортовые фотоприемники на дроне фиксируют пересечение лучей.</p>
+                    <div class="bg-slate-800 p-3 rounded border border-slate-700 text-xs font-mono space-y-1">
+                        <div>Фотоприемники -> Аналоговые пины A0, A1, A2, A3</div>
+                        <div>Питание датчиков -> 5V / GND</div>
+                        <div>* Позволяет абсолютно точно определять площадь <code class="text-teal-300">S = W × H</code>.</div>
+                    </div>
+                `
+            },
+            pump: {
+                title: "Релейный модуль и Водяная помпа 12V",
+                html: `
+                    <p class="text-slate-300 mb-2">Управляет подачей моющей жидкости через форсунки.</p>
+                    <div class="bg-slate-800 p-3 rounded border border-slate-700 text-xs font-mono space-y-1">
+                        <div>DC+ -> 5V | DC- -> GND (Питание платы реле)</div>
+                        <div>IN -> Pin 7 (Управляющий сигнал от Arduino)</div>
+                        <div>COM & NO -> Разрыв в силовой цепи питания водяной помпы 12V.</div>
+                    </div>
+                `
+            },
+            indicators: {
+                title: "Адресная светодиодная лента (WS2812B)",
+                html: `
+                    <p class="text-slate-300 mb-2">Обеспечивает красивую световую индикацию режимов мойки и статуса сканирования площади.</p>
+                    <div class="bg-slate-800 p-3 rounded border border-slate-700 text-xs font-mono space-y-1">
+                        <div>VCC -> 5V (от внешнего стабилизатора или BEC)</div>
+                        <div>GND -> Общая земля</div>
+                        <div>DIN (Data In) -> Pin 6 (Arduino Mega через резистор 330 Ом)</div>
+                    </div>
+                `
+            },
+            vacuum: {
+                title: "Вакуумный прижим / Бесколлекторная турбина",
+                html: `
+                    <p class="text-slate-300 mb-2">Создает отрицательное давление воздуха для удержания устройства на вертикальной поверхности.</p>
+                    <ul class="text-sm space-y-1 text-slate-300">
+                        <li>Питается напрямую от силового аккумулятора 3S (11.1V).</li>
+                        <li>Управляется регулятором оборотов (ESC) через PWM-сигнал с пина 9 Arduino.</li>
+                    </ul>
+                `
+            }
+        };
+
+        function showPinDetails(nodeKey) {
+            const data = pinDetails[nodeKey];
+            if (!data) return;
+            const titleEl = document.getElementById('inspector-title');
+            const contentEl = document.getElementById('inspector-content');
+
+            titleEl.innerHTML = `<i class="fa-solid fa-circle-check text-cyan-400"></i> ${data.title}`;
+            contentEl.innerHTML = data.html;
+
+            // Highlight active box
+            document.querySelectorAll('.node-box').forEach(el => el.classList.remove('ring-2', 'ring-cyan-400'));
+            event.currentTarget.classList.add('ring-2', 'ring-cyan-400');
+        }
+
+        // Initialize default view on load
+        window.onload = function() {
+            showPinDetails('mcu');
+        };
+    </script>
+</body>
+</html>
